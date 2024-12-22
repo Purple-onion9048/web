@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z的web</title>
+    <style>
+        /* 导航栏样式 */
+        .navbar {
+            display: flex;
+            justify-content: center;
+            background-color: #333;
+            padding: 10px;
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 9998;  /* 设置导航栏为第二高的层级 */
+        }
+
+        .navbar a {
+            color: white;
+            padding: 14px 20px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        /* 隐藏/显示不同页面的内容 */
+        .content {
+            display: none;
+            padding: 20px;
+        }
+
+        /* 显示当前选中的内容 */
+        .active {
+            display: block;
+        }
+
+        /* 幻灯片容器 */
+        .slideshow-container {
+            position: relative;
+            max-width: 100%;
+            margin: auto;
+        }
+
+        .slides {
+            display: none;
+            width: 100%;
+        }
+
+        /* 幻灯片切换按钮 */
+        .prev, .next {
+            position: absolute;
+            top: 50%;
+            padding: 16px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: none;
+            cursor: pointer;
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .prev {
+            left: 0;
+        }
+
+        .next {
+            right: 0;
+        }
+
+        .prev:hover, .next:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        /* 音乐播放器样式 */
+        .player-container {
+            position: fixed;
+            bottom: 10px;
+            left: -510px;
+            width: 500px;
+            height: 140px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 0 10px 10px 0;
+            transition: left 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            z-index: 9999;  /* 设置播放器为最高层级 */
+        }
+
+        /* 音乐播放器按钮样式 */
+        .toggle-btn {
+            position: absolute;
+            top: 50%;
+            right: -60px;
+            width: 60px;
+            height: 60px;
+            background-color: #007bff; /* 纯色背景 */
+            color: #007bff;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 0 10px 10px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50%);
+            transition: all 0.3s ease;
+        }
+
+        /* 按钮的hover效果 */
+        .toggle-btn:hover {
+            background-color: #0056b3; /* 鼠标悬停时的颜色 */
+        }
+
+
+        .player-container.open {
+            left: 0;
+        }
+
+        .controls, .progress-container, .volume-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .progress {
+            width: 100%;
+            height: 6px;
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+
+        .progress::-webkit-slider-thumb {
+            height: 10px;
+            width: 10px;
+            background: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        select, button {
+            padding: 5px;
+            font-size: 14px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .play-btn, .loop-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .volume-slider {
+            width: 80%;
+            margin-top: 5px;
+        }
+
+        /* 幻灯片图片样式 */
+        .slides {
+            display: none;
+            max-width: 50%;        /* 最大宽度设置为容器宽度的 50% */
+            max-height: 500px;     /* 最大高度为 500px */
+            margin: auto;          /* 图片居中 */
+            object-fit: contain;   /* 保持图片比例 */
+            border-radius: 10px;   /* 图片圆角 */
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* 图片阴影 */
+        }
+
+        /* 内容区域样式 */
+        .content {
+            display: none;
+            padding: 20px;
+        }
+
+        /* 激活的内容 */
+        .active {
+            display: block;
+        }
+
+        /* 文章简介样式 */
+        .article-summary {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        /* 链接样式 */
+        .article-link {
+            color: #007bff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        
+
+    </style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<div class="navbar">
+    <a href="javascript:void(0)" onclick="openPage('page1')">首页</a>
+    <a href="javascript:void(0)" onclick="openPage('articles')">文章</a>
+    <a href="javascript:void(0)" onclick="openPage('page2')">图片</a>
+    <a href="javascript:void(0)" onclick="openPage('page3')">关于</a>
+</div>
+
+<!-- 内容区域 -->
+<div id="page1" class="content active">
+    <h2>欢迎</h2>
+    <p>这里是首页的内容（什么都没有）</p>
+</div>
+
+<div id="page2" class="content">
+    <h2>一些图片</h2>
+    <div class="slideshow-container">
+        <img class="slides fade" src="photos/image1.jpg" alt="图片1">
+        <img class="slides fade" src="photos/image2.jpg" alt="图片2">
+        <img class="slides fade" src="photos/image3.jpg" alt="图片3">
+        <img class="slides fade" src="photos/image4.jpg" alt="图片4">
+        <img class="slides fade" src="photos/image5.jpg" alt="图片5">
+        <img class="slides fade" src="photos/image6.jpg" alt="图片6">
+        <img class="slides fade" src="photos/image7.jpg" alt="图片7">
+        <img class="slides fade" src="photos/image8.jpg" alt="图片8">
+        <img class="slides fade" src="photos/image9.jpg" alt="图片9">
+        <!-- 左右切换按钮 -->
+        <a class="prev" onclick="changeSlides(-1)">&#10094;</a>
+        <a class="next" onclick="changeSlides(1)">&#10095;</a>
+    </div>
+</div>
+
+<div id="page3" class="content">
+    <h2>关于</h2>
+    <p>这里是关于（依旧什么都没有）</p>
+</div>
+
+
+<!-- 音乐播放器 -->
+<div class="player-container" id="player">
+    <button class="toggle-btn" id="toggleBtn" onclick="togglePlayer()">&#x3e;</button>
+    <div class="controls">
+        <select id="song-selector" onchange="changeSong()">
+            <option value="music/Tek It (sped up).mp3">Tek It (sped up)</option>
+            <option value="music/Pigstep(Remix).mp3">Pigstep(Remix)</option>
+            <option value="music/The Hampsterdance Song-The Hit Crew.mp3">The Hampsterdance Song-The Hit Crew</option>
+        </select>
+        <button id="play-pause-btn" class="play-btn" onclick="togglePlayPause()">播放</button>
+        <button id="loop-btn" class="loop-btn" onclick="toggleLoop()">单曲循环: 关</button>
+    </div>
+    <div class="progress-container">
+        <input type="range" id="progress-bar" class="progress" value="0" max="100">
+    </div>
+    <div class="volume-container">
+        <label for="volume-control">音量</label>
+        <input type="range" id="volume-control" class="volume-slider" min="0" max="1" step="0.1" value="1">
+    </div>
+</div>
+
+<audio id="audio-player">
+    <source src="music/Tek It (sped up).mp3" type="audio/mp3">
+    您的浏览器不支持音频元素。
+</audio>
+
+<!-- 文章简介页面 -->
+<div id="articles" class="content">
+    <h2>文章</h2>
+    <div id="article-summaries"></div>
+</div>
+
+<!-- 文章详情页面 -->
+<div id="article-content" class="content">
+    <h2>内容详细</h2>
+    <div id="full-article"></div>
+</div>
+
+<script>
+    // 切换不同页面内容的函数
+    function openPage(pageId) {
+        const pages = document.querySelectorAll('.content');
+        pages.forEach(page => {
+            page.classList.remove('active'); // 隐藏所有页面
+        });
+        document.getElementById(pageId).classList.add('active'); // 显示当前选择的页面
+    }
+
+    // 加载文章简介
+    function loadArticleSummaries() {
+        fetch('summaries.json') // 使用 summaries.json 文件存储文章简介
+            .then(response => response.json())
+            .then(data => {
+                const summariesContainer = document.getElementById('article-summaries');
+                summariesContainer.innerHTML = ''; // 清空之前的内容
+                data.forEach(article => {
+                    const summaryDiv = document.createElement('div');
+                    summaryDiv.className = 'article-summary';
+                    summaryDiv.innerHTML = `<h3>${article.title}</h3>
+                        <p>${article.summary}</p>
+                        <span class="article-link" onclick="loadArticle('${article.file}')">阅读更多</span>`;
+                    summariesContainer.appendChild(summaryDiv);
+                });
+            })
+            .catch(error => console.error('加载文章简介时出错:', error));
+    }
+
+    // 加载单篇文章的内容
+    function loadArticle(file) {
+        fetch(file)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('full-article').innerHTML = data;
+                openPage('article-content');
+            })
+            .catch(error => console.error('加载文章内容时出错:', error));
+    }
+
+    // 页面加载后自动加载文章简介
+    window.onload = loadArticleSummaries;
+
+    // 幻灯片功能
+    let slideIndex = 0;
+    showSlides(slideIndex);
+
+    function changeSlides(n) {
+        showSlides(slideIndex += n);
+    }
+
+    function showSlides(n) {
+        let slides = document.getElementsByClassName("slides");
+        if (n >= slides.length) { slideIndex = 0 }
+        if (n < 0) { slideIndex = slides.length - 1 }
+        for (let i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+        slides[slideIndex].style.display = "block";
+    }
+
+    // 音乐播放器功能
+    const audioPlayer = document.getElementById('audio-player');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const loopBtn = document.getElementById('loop-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const volumeControl = document.getElementById('volume-control');
+    const toggleBtn = document.getElementById('toggleBtn');
+
+    let isPlaying = false;
+    let isLooping = false;
+    let songList = [
+        'music/Tek It (sped up).mp3',
+        'music/Pigstep(Remix).mp3'
+    ];
+    let currentSongIndex = 0;
+
+    // 播放/暂停音乐
+    function togglePlayPause() {
+        if (isPlaying) {
+            audioPlayer.pause();
+            playPauseBtn.textContent = '播放';
+        } else {
+            audioPlayer.play();
+            playPauseBtn.textContent = '暂停';
+        }
+        isPlaying = !isPlaying;
+    }
+
+    // 切换歌曲
+    function changeSong() {
+        const song = document.getElementById('song-selector').value;
+        audioPlayer.src = song;
+        togglePlayPause(); // 自动播放新歌曲
+    }
+
+    // 开启/关闭单曲循环
+    function toggleLoop() {
+        isLooping = !isLooping;
+        loopBtn.textContent = isLooping ? '单曲循环: 开' : '单曲循环: 关';
+        audioPlayer.loop = isLooping;
+    }
+
+    // 更新进度条
+    audioPlayer.addEventListener('timeupdate', () => {
+        const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        progressBar.value = progress;
+    });
+
+    // 手动调整进度
+    progressBar.addEventListener('input', () => {
+        audioPlayer.currentTime = (progressBar.value / 100) * audioPlayer.duration;
+    });
+
+    // 音量控制
+    volumeControl.addEventListener('input', () => {
+        audioPlayer.volume = volumeControl.value;
+    });
+
+    // 控制播放器展开/收起
+    function togglePlayer() {
+        const player = document.getElementById('player');
+        player.classList.toggle('open');
+        toggleBtn.textContent = player.classList.contains('open') ? '&#x3c;' : '&#x3e;';
+    }
+
+    // 页面点击时收回播放器
+    document.addEventListener('click', (event) => {
+        const player = document.getElementById('player');
+        if (!player.contains(event.target) && player.classList.contains('open')) {
+            togglePlayer();  // 收回播放器
+        }
+    });
+
+    // 歌曲播放完毕时，播放下一首
+    audioPlayer.addEventListener('ended', () => {
+        currentSongIndex = (currentSongIndex + 1) % songList.length; // 下一首歌曲（循环）
+        audioPlayer.src = songList[currentSongIndex];
+        audioPlayer.play();
+    
+        // 更新选择框的值
+        document.getElementById('song-selector').value = songList[currentSongIndex];
+    });
+
+</script>
+
+</body>
+</html>
